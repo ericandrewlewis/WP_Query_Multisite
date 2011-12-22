@@ -1,13 +1,5 @@
 <?php
 
-// Example usage:
-
-// $query = new WP_Query_Multisite( array('post_type' => 'post' ) );
-// while($query->have_posts()) : $query->the_post();
-//     echo $blog_id . get_the_title() . "<BR>";
-// endwhile; 
-// wp_reset_postdata();
-
 class WP_Query_Multisite extends WP_Query{
 	
    
