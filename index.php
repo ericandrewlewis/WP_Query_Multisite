@@ -1,15 +1,14 @@
 <?php
 
 class WP_Query_Multisite extends WP_Query{
-	
+
    
     var $args;
     
     function __construct( $args = array() ) {
+        $this->args = $args;
         $this->parse_multisite_args();
         $this->add_filters();
-        $args = wp_parse_args($args, $defaults);
-        $this->args = $args;
         $this->query($args);              
         $this->remove_filters();
 
@@ -26,9 +25,11 @@ class WP_Query_Multisite extends WP_Query{
         
         if ( isset( $this->args['sites']['sites__in'] ) )
             foreach($site_IDs as $key => $site_ID )
-                if ( ! in_array($site_ID, $this->args['sites']['sites__in']) ) unset($site_IDs[$key]);
+                if ( ! in_array($site_ID, $this->args['sites']['sites__in']) ) 
+                    unset($site_IDs[$key]);
+
         
-        ksort($site_IDs);
+        $site_IDs = array_values($site_IDs);
         $this->sites_to_query = $site_IDs;
     }
 
@@ -46,8 +47,7 @@ class WP_Query_Multisite extends WP_Query{
     }
 
     function create_and_unionize_select_statements($sql) {
-        global $in_custom_archive_query, $blog_id, $in_network_listings, $wpdb;
-        
+        global $wpdb;
         foreach ($this->sites_to_query as $key => $site_ID) :
 
             switch_to_blog($site_ID);
@@ -70,7 +70,7 @@ class WP_Query_Multisite extends WP_Query{
         $posts_per_page = $this->args['posts_per_page'] ? $this->args['posts_per_page'] : 10;
         $skip = ( $page * $posts_per_page ) - $posts_per_page;
 
-        $orderby = "tables.post_title";
+        $orderby = "tables.post_date DESC";
         $new_sql = "SELECT SQL_CALC_FOUND_ROWS tables.* FROM ( " . implode(" UNION ", $new_sql_selects) . ") tables ORDER BY $orderby LIMIT $skip, $posts_per_page";
 
         return $new_sql;
