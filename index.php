@@ -48,11 +48,12 @@ class WP_Query_Multisite extends WP_Query{
 
     function create_and_unionize_select_statements($sql) {
         global $wpdb;
-        foreach ($this->sites_to_query as $key => $site_ID) :
+
+        $root_site_db_prefix = $wpdb->prefix;
+        
+            foreach ($this->sites_to_query as $key => $site_ID) :
 
             switch_to_blog($site_ID);
-
-            $root_site_db_prefix = $wpdb->prefix;
 
             $new_sql_select = str_replace($root_site_db_prefix, $wpdb->prefix, $sql);
             $new_sql_select = preg_replace("/ LIMIT ([0-9]+), 10/", "", $new_sql_select);
