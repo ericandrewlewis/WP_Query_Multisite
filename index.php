@@ -51,12 +51,15 @@ class WP_Query_Multisite extends WP_Query{
 
 		$root_site_db_prefix = $wpdb->prefix;
 		
+		$page = $this->args['paged'] ? $this->args['paged'] : 1;
+		$posts_per_page = $this->args['posts_per_page'] ? $this->args['posts_per_page'] : 10;
+		
 			foreach ($this->sites_to_query as $key => $site_ID) :
 
 			switch_to_blog($site_ID);
 
 			$new_sql_select = str_replace($root_site_db_prefix, $wpdb->prefix, $sql);
-			$new_sql_select = preg_replace("/ LIMIT ([0-9]+), 10/", "", $new_sql_select);
+			$new_sql_select = preg_replace("/ LIMIT ([0-9]+), ".$posts_per_page."/", "", $new_sql_select);
 			$new_sql_select = str_replace("SQL_CALC_FOUND_ROWS ", "", $new_sql_select);
 			$new_sql_select = str_replace("# AS site_ID", "'$site_ID' AS site_ID", $new_sql_select);
 			$new_sql_select = preg_replace( '/ORDER BY ([A-Za-z0-9_.]+)/', "", $new_sql_select);
@@ -67,8 +70,6 @@ class WP_Query_Multisite extends WP_Query{
 
 		endforeach;
 
-		$page = $this->args['paged'] ? $this->args['paged'] : 1;
-		$posts_per_page = $this->args['posts_per_page'] ? $this->args['posts_per_page'] : 10;
 		if ( $posts_per_page > 0 ) {
 			$skip = ( $page * $posts_per_page ) - $posts_per_page;
 			$limit = "LIMIT $skip, $posts_per_page";
