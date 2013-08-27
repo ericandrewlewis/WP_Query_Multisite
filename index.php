@@ -17,7 +17,7 @@ class WP_Query_Multisite extends WP_Query{
 	function parse_multisite_args() {
 		global $wpdb;
 		
-		$site_IDs = $wpdb->get_col( $wpdb->prepare("select blog_id from $wpdb->blogs") );
+		$site_IDs = $wpdb->get_col( "select blog_id from $wpdb->blogs" );
 
 		if ( isset( $this->args['sites']['sites__not_in'] ) )
 			foreach($site_IDs as $key => $site_ID )
