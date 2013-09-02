@@ -31,5 +31,20 @@ $query = new WP_Query( $args );
 while($query->have_posts()) : $query->the_post();
     echo $blog_id . get_the_title() . "<BR>";
 endwhile; 
-wp_reset_postdata
+wp_reset_postdata();
+```
+
+### Automatic multisite search example
+
+On your functions.php:
+
+```php
+include_once(TEMPLATEPATH . '/path/to/multisite-query.php');
+
+function my_multisite_search($query) {
+	if(!is_admin() && $query->is_main_query() && $query->is_search) {
+		$query->set('multisite', 1);
+	}
+}
+add_action('pre_get_posts', 'my_multisite_search');
 ```
