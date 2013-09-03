@@ -1,10 +1,6 @@
 # WordPress Query Multisite
 
-WP_Query_Multisite is a subclass of WP_Query, WordPress' post querying class. The class does everything behind the scenes, so the only change you make to query multisite is the in the class declaration expression.
-
-----------------
-
-This is a custom version to support multisite queries without the need of calling a subclass. Just by entering the custom query var **multisite => 1** on your query args your query is now global.
+This is a custom version of [WP_Query_Multisite](https://github.com/ericandrewlewis/WP_Query_Multisite), by [ericandrewlewis](https://github.com/ericandrewlewis), to support multisite queries without changing the class declaration expression. Just by entering the custom query var **multisite => 1** on your query args your query is now global.
 
 -----------------
 
