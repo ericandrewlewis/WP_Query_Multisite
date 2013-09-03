@@ -1,12 +1,12 @@
 <?php
 
 class WP_Query_Multisite {
-	
+
 	function __construct() {
 		add_filter('query_vars', array($this, 'query_vars'));
 		add_action('pre_get_posts', array($this, 'pre_get_posts'), 100);
+		add_filter('posts_clauses', array($this, 'posts_clauses'), 10, 2);
 		add_filter('posts_request', array($this, 'posts_request'), 10, 2);
-		add_filter('posts_fields', array($this, 'posts_fields'), 10, 2);
 		add_action('the_post', array($this, 'the_post'));
 		add_action('loop_end', array($this, 'loop_end'));
 	}
@@ -15,7 +15,6 @@ class WP_Query_Multisite {
 		$vars[] = 'multisite';
 		$vars[] = 'sites__not_in';
 		$vars[] = 'sites__in';
-		$vars[] = 'sites_to_query';
 		return $vars;
 	}
 	
@@ -26,7 +25,7 @@ class WP_Query_Multisite {
 
 			$this->loop_end = false;
 			$this->blog_id = $blog_id;
-			
+
 			$site_IDs = $wpdb->get_col( "select blog_id from $wpdb->blogs" );
 
 			if ( $query->get('sites__not_in') )
@@ -40,64 +39,65 @@ class WP_Query_Multisite {
 
 			$site_IDs = array_values($site_IDs);
 
-			$query->set('sites_to_query', $site_IDs);
+			$this->sites_to_query = $site_IDs;
 		}
 	}
 
-	function posts_request($sql, $query) {
+	function posts_clauses($clauses, $query) {
 		if($query->get('multisite')) {
 			global $wpdb;
 
+			// Orderby for tables (not wp_posts)
+			$clauses['orderby'] = str_replace($wpdb->posts, 'tables', $clauses['orderby']);
+
+			// State new selection to replace wp_posts on posts_request
+			$this->ms_select = array();
+
 			$root_site_db_prefix = $wpdb->prefix;
-			
-			$page = $query->get('paged') ? $query->get('paged') : 1;
-			$posts_per_page = $query->get('posts_per_page') ? $query->get('posts_per_page') : 10;
-
-			$sites_to_query = $query->get('sites_to_query');
-
-			foreach($sites_to_query as $key => $site_ID) {
+			foreach($this->sites_to_query as $site_ID) {
 
 				switch_to_blog($site_ID);
 
-				$new_sql_select = str_replace($root_site_db_prefix, $wpdb->prefix, $sql);
-				$new_sql_select = preg_replace("/ LIMIT ([0-9]+), ".$posts_per_page."/", "", $new_sql_select);
-				$new_sql_select = str_replace("SQL_CALC_FOUND_ROWS ", "", $new_sql_select);
-				$new_sql_select = str_replace("# AS site_ID", "'$site_ID' AS site_ID", $new_sql_select);
-				$new_sql_select = preg_replace( '/ORDER BY ([A-Za-z0-9_.]+)/', "", $new_sql_select);
-				$new_sql_select = str_replace(array("DESC", "ASC"), "", $new_sql_select);
-				
-				$new_sql_selects[] = $new_sql_select;
+				$ms_select = str_replace($root_site_db_prefix, $wpdb->prefix, $clauses['where']);
+				$ms_select = " SELECT $wpdb->posts.*, '$site_ID' as site_ID FROM $wpdb->posts WHERE 1=1 $ms_select ";
+
+				$this->ms_select[] = $ms_select;
+
 				restore_current_blog();
 
 			}
 
-			if ( $posts_per_page > 0 ) {
-				$skip = ( $page * $posts_per_page ) - $posts_per_page;
-				$limit = "LIMIT $skip, $posts_per_page";
-			} else {
-	            $limit = '';
-	        }
-			$orderby = "tables.post_date DESC";
-			$sql = "SELECT SQL_CALC_FOUND_ROWS tables.* FROM ( " . implode(" UNION ", $new_sql_selects) . ") tables ORDER BY $orderby " . $limit;
+			// Clear where to populate on posts_request;
+			$clauses['where'] = '';
 
 		}
-		return $sql;
+		return $clauses;
 	}
-	
-	function posts_fields($sql, $query) {
+
+	function posts_request($sql, $query) {
+
 		if($query->get('multisite')) {
-			$sql_statements[] = $sql;
-			$sql_statements[] = "# AS site_ID";
-			$sql = implode(', ', $sql_statements);
+
+			global $wpdb;
+
+			// Clean up remanescent WHERE request
+			$sql = str_replace('WHERE 1=1', '', $sql);
+
+			// Multisite request
+			$sql = str_replace("$wpdb->posts.* FROM $wpdb->posts", 'tables.* FROM ( ' . implode(" UNION ", $this->ms_select) . ' ) tables', $sql);
+
 		}
+
 		return $sql;
 	}
 	
 	function the_post($post) {
 		global $blog_id;
+
 		if(!$this->loop_end && $post->site_ID && $blog_id !== $post->site_ID) {
 			switch_to_blog($post->site_ID);
 		}
+
 	}
 
 	function loop_end($query) {
