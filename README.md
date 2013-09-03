@@ -19,9 +19,7 @@ To modify what sites are queried, create a 'sites' element in the $args in the c
 ```php
 $args = array(
 	'multisite' => 1,
-	'sites' => array(
-		'sites__in' => array( 1, 2, 3, 5)
-	)
+	'sites__in' => array( 1, 2, 3, 5)
 );
 $query = new WP_Query( $args );
 while($query->have_posts()) : $query->the_post();
