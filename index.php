@@ -47,10 +47,7 @@ class WP_Query_Multisite {
 		if($query->get('multisite')) {
 			global $wpdb;
 
-			// Orderby for tables (not wp_posts)
-			$clauses['orderby'] = str_replace($wpdb->posts, 'tables', $clauses['orderby']);
-
-			// State new selection to replace wp_posts on posts_request
+			// Start new mysql selection to replace wp_posts on posts_request hook
 			$this->ms_select = array();
 
 			$root_site_db_prefix = $wpdb->prefix;
@@ -58,8 +55,13 @@ class WP_Query_Multisite {
 
 				switch_to_blog($site_ID);
 
-				$ms_select = str_replace($root_site_db_prefix, $wpdb->prefix, $clauses['where']);
-				$ms_select = " SELECT $wpdb->posts.*, '$site_ID' as site_ID FROM $wpdb->posts WHERE 1=1 $ms_select ";
+				$ms_select = $clauses['join'] . ' WHERE 1=1 '. $clauses['where'];
+
+				if($clauses['groupby'])
+					$ms_select .= ' GROUP BY ' . $clauses['groupby'];
+
+				$ms_select = str_replace($root_site_db_prefix, $wpdb->prefix, $ms_select);
+				$ms_select = " SELECT $wpdb->posts.*, '$site_ID' as site_ID FROM $wpdb->posts $ms_select ";
 
 				$this->ms_select[] = $ms_select;
 
@@ -67,8 +69,13 @@ class WP_Query_Multisite {
 
 			}
 
-			// Clear where to populate on posts_request;
+			// Clear join, where and groupby to populate with parsed ms select on posts_request hook;
+			$clauses['join'] = '';
 			$clauses['where'] = '';
+			$clauses['groupby'] = '';
+
+			// Orderby for tables (not wp_posts)
+			$clauses['orderby'] = str_replace($wpdb->posts, 'tables', $clauses['orderby']);
 
 		}
 		return $clauses;
