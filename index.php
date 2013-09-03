@@ -5,9 +5,9 @@ class WP_Query_Multisite {
 	function __construct() {
 		add_filter('query_vars', array($this, 'query_vars'));
 		add_action('pre_get_posts', array($this, 'pre_get_posts'), 100);
-		add_filter('posts_request', array($this, 'create_and_unionize_select_statements'), 10, 2);
-		add_filter('posts_fields', array($this, 'add_site_ID_to_posts_fields'), 10, 2);
-		add_action('the_post', array($this, 'switch_to_blog_while_in_loop'));
+		add_filter('posts_request', array($this, 'posts_request'), 10, 2);
+		add_filter('posts_fields', array($this, 'posts_fields'), 10, 2);
+		add_action('the_post', array($this, 'the_post'));
 		add_action('loop_end', array($this, 'loop_end'));
 	}
 
@@ -22,7 +22,7 @@ class WP_Query_Multisite {
 	function pre_get_posts($query) {
 		if($query->get('multisite')) {
 
-			global $wpdb;
+			global $wpdb, $blog_id;
 
 			$this->loop_end = false;
 			$this->blog_id = $blog_id;
@@ -44,7 +44,7 @@ class WP_Query_Multisite {
 		}
 	}
 
-	function create_and_unionize_select_statements($sql, $query) {
+	function posts_request($sql, $query) {
 		if($query->get('multisite')) {
 			global $wpdb;
 
@@ -84,7 +84,7 @@ class WP_Query_Multisite {
 		return $sql;
 	}
 	
-	function add_site_ID_to_posts_fields($sql, $query) {
+	function posts_fields($sql, $query) {
 		if($query->get('multisite')) {
 			$sql_statements[] = $sql;
 			$sql_statements[] = "# AS site_ID";
@@ -93,7 +93,7 @@ class WP_Query_Multisite {
 		return $sql;
 	}
 	
-	function switch_to_blog_while_in_loop($post) {
+	function the_post($post) {
 		global $blog_id;
 		if(!$this->loop_end && $post->site_ID && $blog_id !== $post->site_ID) {
 			switch_to_blog($post->site_ID);
