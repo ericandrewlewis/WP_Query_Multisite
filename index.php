@@ -8,6 +8,7 @@ class WP_Query_Multisite {
 		add_filter('posts_request', array($this, 'create_and_unionize_select_statements'), 10, 2);
 		add_filter('posts_fields', array($this, 'add_site_ID_to_posts_fields'), 10, 2);
 		add_action('the_post', array($this, 'switch_to_blog_while_in_loop'));
+		add_action('loop_end', array($this, 'loop_end'));
 	}
 
 	function query_vars($vars) {
@@ -22,6 +23,9 @@ class WP_Query_Multisite {
 		if($query->get('multisite')) {
 
 			global $wpdb;
+
+			$this->loop_end = false;
+			$this->blog_id = $blog_id;
 			
 			$site_IDs = $wpdb->get_col( "select blog_id from $wpdb->blogs" );
 
@@ -90,13 +94,19 @@ class WP_Query_Multisite {
 	}
 	
 	function switch_to_blog_while_in_loop($post) {
-		global $wp_query;
-		if($wp_query->get('multisite')) { 
-			global $blog_id;
-			if($post->site_ID && $blog_id != $post->site_ID )
-				switch_to_blog($post->site_ID);
-			else
-				restore_current_blog();
+		global $blog_id;
+		if(!$this->loop_end && $post->site_ID && $blog_id !== $post->site_ID) {
+			switch_to_blog($post->site_ID);
+		}
+	}
+
+	function loop_end($query) {
+		global $switched;
+		if($query->get('multisite')) {
+			$this->loop_end = true;
+			if($switched) {
+				switch_to_blog($this->blog_id);
+			}
 		}
 	}
 }
