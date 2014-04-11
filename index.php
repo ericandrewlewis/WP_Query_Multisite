@@ -51,10 +51,10 @@ class WP_Query_Multisite extends WP_Query{
 
 		$root_site_db_prefix = $wpdb->prefix;
 		
-		$page = $this->args['paged'] ? $this->args['paged'] : 1;
-		$posts_per_page = $this->args['posts_per_page'] ? $this->args['posts_per_page'] : 10;
 		
 			foreach ($this->sites_to_query as $key => $site_ID) :
+		$page = isset( $this->args['paged'] ) ? $this->args['paged'] : 1;
+		$posts_per_page = isset( $this->args['posts_per_page'] ) ? $this->args['posts_per_page'] : 10;
 
 			switch_to_blog( $site_ID );
 
