@@ -51,10 +51,11 @@ class WP_Query_Multisite extends WP_Query{
 
 		$root_site_db_prefix = $wpdb->prefix;
 		
-		
-			foreach ($this->sites_to_query as $key => $site_ID) :
 		$page = isset( $this->args['paged'] ) ? $this->args['paged'] : 1;
 		$posts_per_page = isset( $this->args['posts_per_page'] ) ? $this->args['posts_per_page'] : 10;
+		$s = ( isset( $this->args['s'] ) ) ? $this->args['s'] : false;
+
+		foreach ($this->sites_to_query as $key => $site_ID) :
 
 			switch_to_blog( $site_ID );
 
@@ -64,6 +65,11 @@ class WP_Query_Multisite extends WP_Query{
 			$new_sql_select = str_replace("# AS site_ID", "'$site_ID' AS site_ID", $new_sql_select);
 			$new_sql_select = preg_replace( '/ORDER BY ([A-Za-z0-9_.]+)/', "", $new_sql_select);
 			$new_sql_select = str_replace(array("DESC", "ASC"), "", $new_sql_select);
+
+			if( $s ){
+				$new_sql_select = str_replace("LIKE '%{$s}%' , wp_posts.post_date", "", $new_sql_select); //main site id
+				$new_sql_select = str_replace("LIKE '%{$s}%' , wp_{$site_ID}_posts.post_date", "", $new_sql_select);  // all other sites
+			}
 			
 			$new_sql_selects[] = $new_sql_select;
 			restore_current_blog();
