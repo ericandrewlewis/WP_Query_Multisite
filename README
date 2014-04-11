@@ -2,24 +2,33 @@ WP_Query_Multisite is a subclass of WP_Query, WordPress' post querying class. Th
 
 Example usage:
 
-$query = new WP_Query_Multisite( array('post_type' => 'post' ) );
-while($query->have_posts()) : $query->the_post();
+```
+$query = new WP_Query_Multisite( array( 'post_type' => 'post' ) );
+
+while( $query->have_posts() ) : $query->the_post();
     echo $blog_id . get_the_title() . "<BR>";
-endwhile; 
+endwhile;
+
 wp_reset_postdata();
+```
 
-To modify what sites are queried, create a 'sites' element in the $args in the constructor parameter, with a sub-element of either 'sites__in' or 'sites__not_in', which will be an array similar to 'posts__in' in the WP_Query object. 
+To modify what sites are queried, create a `sites` key in the `$args` in the constructor parameter, with a sub-element of either `sites__in` or `sites__not_in`, which will be an `array` similar to `posts__in` in the `WP_Query` object. 
 
-EX: 
-
+Example usage:
+ 
+```
 $args = array(
 	'post_type' => 'post',
 	'sites' => array(
-		'sites__in' => array( 1, 2, 3, 5)
+		'sites__in' => array( 1, 2, 3, 5 )
 	)
 );
+
 $query = new WP_Query_Multisite( $args );
-while($query->have_posts()) : $query->the_post();
+
+while( $query->have_posts() ) : $query->the_post();
     echo $blog_id . get_the_title() . "<BR>";
 endwhile; 
+
 wp_reset_postdata();
+```
