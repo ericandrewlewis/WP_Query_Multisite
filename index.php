@@ -46,7 +46,7 @@ class WP_Query_Multisite extends WP_Query{
 
 	}
 
-	function create_and_unionize_select_statements($sql) {
+	function create_and_unionize_select_statements( $sql ) {
 		global $wpdb;
 
 		$root_site_db_prefix = $wpdb->prefix;
@@ -56,7 +56,7 @@ class WP_Query_Multisite extends WP_Query{
 		
 			foreach ($this->sites_to_query as $key => $site_ID) :
 
-			switch_to_blog($site_ID);
+			switch_to_blog( $site_ID );
 
 			$new_sql_select = str_replace($root_site_db_prefix, $wpdb->prefix, $sql);
 			$new_sql_select = preg_replace("/ LIMIT ([0-9]+), ".$posts_per_page."/", "", $new_sql_select);
@@ -82,13 +82,13 @@ class WP_Query_Multisite extends WP_Query{
 		return $new_sql;
 	}
 	
-	function add_site_ID_to_posts_fields($sql) {
+	function add_site_ID_to_posts_fields( $sql ) {
 		$sql_statements[] = $sql;
 		$sql_statements[] = "# AS site_ID";
 		return implode(', ', $sql_statements);
 	}
 	
-	function switch_to_blog_while_in_loop($post) {
+	function switch_to_blog_while_in_loop( $post ) {
 		global $blog_id;
 		if($post->site_ID && $blog_id != $post->site_ID )
 			switch_to_blog($post->site_ID);
@@ -97,4 +97,3 @@ class WP_Query_Multisite extends WP_Query{
 	}
 }
 
-?>
