@@ -46,17 +46,18 @@ class WP_Query_Multisite extends WP_Query{
 
 	}
 
-	function create_and_unionize_select_statements($sql) {
+	function create_and_unionize_select_statements( $sql ) {
 		global $wpdb;
 
 		$root_site_db_prefix = $wpdb->prefix;
 		
-		$page = $this->args['paged'] ? $this->args['paged'] : 1;
-		$posts_per_page = $this->args['posts_per_page'] ? $this->args['posts_per_page'] : 10;
-		
-			foreach ($this->sites_to_query as $key => $site_ID) :
+		$page = isset( $this->args['paged'] ) ? $this->args['paged'] : 1;
+		$posts_per_page = isset( $this->args['posts_per_page'] ) ? $this->args['posts_per_page'] : 10;
+		$s = ( isset( $this->args['s'] ) ) ? $this->args['s'] : false;
 
-			switch_to_blog($site_ID);
+		foreach ($this->sites_to_query as $key => $site_ID) :
+
+			switch_to_blog( $site_ID );
 
 			$new_sql_select = str_replace($root_site_db_prefix, $wpdb->prefix, $sql);
 			$new_sql_select = preg_replace("/ LIMIT ([0-9]+), ".$posts_per_page."/", "", $new_sql_select);
@@ -64,6 +65,11 @@ class WP_Query_Multisite extends WP_Query{
 			$new_sql_select = str_replace("# AS site_ID", "'$site_ID' AS site_ID", $new_sql_select);
 			$new_sql_select = preg_replace( '/ORDER BY ([A-Za-z0-9_.]+)/', "", $new_sql_select);
 			$new_sql_select = str_replace(array("DESC", "ASC"), "", $new_sql_select);
+
+			if( $s ){
+				$new_sql_select = str_replace("LIKE '%{$s}%' , wp_posts.post_date", "", $new_sql_select); //main site id
+				$new_sql_select = str_replace("LIKE '%{$s}%' , wp_{$site_ID}_posts.post_date", "", $new_sql_select);  // all other sites
+			}
 			
 			$new_sql_selects[] = $new_sql_select;
 			restore_current_blog();
@@ -82,13 +88,13 @@ class WP_Query_Multisite extends WP_Query{
 		return $new_sql;
 	}
 	
-	function add_site_ID_to_posts_fields($sql) {
+	function add_site_ID_to_posts_fields( $sql ) {
 		$sql_statements[] = $sql;
 		$sql_statements[] = "# AS site_ID";
 		return implode(', ', $sql_statements);
 	}
 	
-	function switch_to_blog_while_in_loop($post) {
+	function switch_to_blog_while_in_loop( $post ) {
 		global $blog_id;
 		if($post->site_ID && $blog_id != $post->site_ID )
 			switch_to_blog($post->site_ID);
@@ -97,4 +103,3 @@ class WP_Query_Multisite extends WP_Query{
 	}
 }
 
-?>
