@@ -6,8 +6,6 @@ class WP_Query_Multisite extends WP_Query{
 	var $args;
 	
 	function __construct( $args = array() ) {
-		global $blog_id;
-
 		$this->args = $args;
 		$this->parse_multisite_args();
 		$this->add_filters();
