@@ -73,7 +73,7 @@ class WP_Query_Multisite extends WP_Query{
 			}
 			
 			$new_sql_selects[] = $new_sql_select;
-			//restore_current_blog();
+			restore_current_blog();
 
 		endforeach;
 
