@@ -6,6 +6,8 @@ class WP_Query_Multisite extends WP_Query{
 	var $args;
 	
 	function __construct( $args = array() ) {
+		global $blog_id;
+
 		$this->args = $args;
 		$this->parse_multisite_args();
 		$this->add_filters();
@@ -38,6 +40,7 @@ class WP_Query_Multisite extends WP_Query{
 			add_filter('posts_request', array(&$this, 'create_and_unionize_select_statements') );
 			add_filter('posts_fields', array(&$this, 'add_site_ID_to_posts_fields') );
 			add_action('the_post', array(&$this, 'switch_to_blog_while_in_loop'));
+			add_action('loop_end', array(&$this, 'restore_current_blog_after_loop'));
 			
 	}
 	function remove_filters() {
@@ -57,8 +60,6 @@ class WP_Query_Multisite extends WP_Query{
 
 		foreach ($this->sites_to_query as $key => $site_ID) :
 
-			switch_to_blog( $site_ID );
-
 			$new_sql_select = str_replace($root_site_db_prefix, $wpdb->prefix, $sql);
 			$new_sql_select = preg_replace("/ LIMIT ([0-9]+), ".$posts_per_page."/", "", $new_sql_select);
 			$new_sql_select = str_replace("SQL_CALC_FOUND_ROWS ", "", $new_sql_select);
@@ -72,7 +73,7 @@ class WP_Query_Multisite extends WP_Query{
 			}
 			
 			$new_sql_selects[] = $new_sql_select;
-			restore_current_blog();
+			//restore_current_blog();
 
 		endforeach;
 
@@ -98,8 +99,12 @@ class WP_Query_Multisite extends WP_Query{
 		global $blog_id;
 		if($post->site_ID && $blog_id != $post->site_ID )
 			switch_to_blog($post->site_ID);
-		else
+	}
+
+	function restore_current_blog_after_loop() {
+		//foreach ($this->sites_to_query as $key => $site_ID) :
 			restore_current_blog();
+		//endforeach;
 	}
 }
 
