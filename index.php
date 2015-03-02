@@ -102,9 +102,7 @@ class WP_Query_Multisite extends WP_Query{
 	}
 
 	function restore_current_blog_after_loop() {
-		//foreach ($this->sites_to_query as $key => $site_ID) :
 			restore_current_blog();
-		//endforeach;
 	}
 }
 
