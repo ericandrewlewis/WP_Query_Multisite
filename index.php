@@ -97,6 +97,8 @@ class WP_Query_Multisite extends WP_Query{
 		global $blog_id;
 		if($post->site_ID && $blog_id != $post->site_ID )
 			switch_to_blog($post->site_ID);
+		else
+			restore_current_blog();
 	}
 
 	function restore_current_blog_after_loop() {
