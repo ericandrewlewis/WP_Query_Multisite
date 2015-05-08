@@ -2,7 +2,7 @@ WP_Query_Multisite is a subclass of WP_Query, WordPress' post querying class. Th
 
 Example usage:
 
-```
+```php
 $query = new WP_Query_Multisite( array( 'post_type' => 'post' ) );
 
 while( $query->have_posts() ) : $query->the_post();
@@ -16,7 +16,7 @@ To modify what sites are queried, create a `sites` key in the `$args` in the con
 
 Example usage:
  
-```
+```php
 $args = array(
 	'post_type' => 'post',
 	'sites' => array(
