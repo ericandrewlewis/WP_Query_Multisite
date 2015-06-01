@@ -21,7 +21,9 @@ $args = array(
 	'post_type' => 'post',
 	'sites' => array(
 		'sites__in' => array( 1, 2, 3, 5 )
-	)
+	),
+    'order_by' => 'title',
+    'order' => 'ASC'
 );
 
 $query = new WP_Query_Multisite( $args );
