@@ -62,6 +62,8 @@ class WP_Query_Multisite extends WP_Query{
 
 		foreach ($this->sites_to_query as $key => $site_ID) :
 
+			switch_to_blog($site_ID);
+
 			$new_sql_select = str_replace($root_site_db_prefix, $wpdb->prefix, $sql);
 			$new_sql_select = preg_replace("/ LIMIT ([0-9]+), ".$posts_per_page."/", "", $new_sql_select);
 			$new_sql_select = str_replace("SQL_CALC_FOUND_ROWS ", "", $new_sql_select);
@@ -98,10 +100,14 @@ class WP_Query_Multisite extends WP_Query{
 	
 	function switch_to_blog_while_in_loop( $post ) {
 		global $blog_id;
-		if($post->site_ID && $blog_id != $post->site_ID )
+
+		if($post->site_ID && $blog_id == $post->site_ID)
+			return;
+
+		restore_current_blog();
+
+		if($post->site_ID && $blog_id != $post->site_ID)
 			switch_to_blog($post->site_ID);
-		else
-			restore_current_blog();
 	}
 
 	function restore_current_blog_after_loop() {
