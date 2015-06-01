@@ -9,9 +9,8 @@ class WP_Query_Multisite extends WP_Query{
 		$this->args = $args;
 		$this->parse_multisite_args();
 		$this->add_filters();
-		$this->query($args);			  
+		$this->query($args);
 		$this->remove_filters();
-
 	}
 	
 	function parse_multisite_args() {
@@ -56,14 +55,20 @@ class WP_Query_Multisite extends WP_Query{
 		$posts_per_page = isset( $this->args['posts_per_page'] ) ? $this->args['posts_per_page'] : 10;
 		$s = ( isset( $this->args['s'] ) ) ? $this->args['s'] : false;
 
+		// order
+		if( !preg_match('/ORDER BY [A-Za-z0-9_]+\.([A-Za-z0-9_.]+) (ASC|DESC)/', $sql, $orderby) ){
+			$orderby = array( 1 => 'post_date', '2' => 'DESC' );
+		}
+
 		foreach ($this->sites_to_query as $key => $site_ID) :
+
+			switch_to_blog($site_ID);
 
 			$new_sql_select = str_replace($root_site_db_prefix, $wpdb->prefix, $sql);
 			$new_sql_select = preg_replace("/ LIMIT ([0-9]+), ".$posts_per_page."/", "", $new_sql_select);
 			$new_sql_select = str_replace("SQL_CALC_FOUND_ROWS ", "", $new_sql_select);
 			$new_sql_select = str_replace("# AS site_ID", "'$site_ID' AS site_ID", $new_sql_select);
-			$new_sql_select = preg_replace( '/ORDER BY ([A-Za-z0-9_.]+)/', "", $new_sql_select);
-			$new_sql_select = str_replace(array("DESC", "ASC"), "", $new_sql_select);
+			$new_sql_select = preg_replace( '/ORDER BY ([A-Za-z0-9_.]+) (ASC|DESC)/', "", $new_sql_select);
 
 			if( $s ){
 				$new_sql_select = str_replace("LIKE '%{$s}%' , wp_posts.post_date", "", $new_sql_select); //main site id
@@ -71,18 +76,18 @@ class WP_Query_Multisite extends WP_Query{
 			}
 			
 			$new_sql_selects[] = $new_sql_select;
+
 			restore_current_blog();
 
 		endforeach;
-
+		
 		if ( $posts_per_page > 0 ) {
 			$skip = ( $page * $posts_per_page ) - $posts_per_page;
 			$limit = "LIMIT $skip, $posts_per_page";
 		} else {
             $limit = '';
         }
-		$orderby = "tables.post_date DESC";
-		$new_sql = "SELECT SQL_CALC_FOUND_ROWS tables.* FROM ( " . implode(" UNION ", $new_sql_selects) . ") tables ORDER BY $orderby " . $limit;
+		$new_sql = "SELECT SQL_CALC_FOUND_ROWS tables.* FROM ( " . implode(" UNION ALL ", $new_sql_selects) . ") tables ORDER BY tables.$orderby[1] $orderby[2] " . $limit;
 
 		return $new_sql;
 	}
@@ -95,10 +100,14 @@ class WP_Query_Multisite extends WP_Query{
 	
 	function switch_to_blog_while_in_loop( $post ) {
 		global $blog_id;
-		if($post->site_ID && $blog_id != $post->site_ID )
+
+		if($post->site_ID && $blog_id == $post->site_ID)
+			return;
+
+		restore_current_blog();
+
+		if($post->site_ID && $blog_id != $post->site_ID)
 			switch_to_blog($post->site_ID);
-		else
-			restore_current_blog();
 	}
 
 	function restore_current_blog_after_loop() {
