@@ -58,6 +58,8 @@ class WP_Query_Multisite extends WP_Query{
 
 		foreach ($this->sites_to_query as $key => $site_ID) :
 
+			switch_to_blog( $site_ID );
+
 			$new_sql_select = str_replace($root_site_db_prefix, $wpdb->prefix, $sql);
 			$new_sql_select = preg_replace("/ LIMIT ([0-9]+), ".$posts_per_page."/", "", $new_sql_select);
 			$new_sql_select = str_replace("SQL_CALC_FOUND_ROWS ", "", $new_sql_select);
