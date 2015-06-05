@@ -104,7 +104,7 @@ class WP_Query_Multisite extends WP_Query{
 	}
 
 	function restore_current_blog_after_loop() {
-			restore_current_blog();
+		restore_current_blog();
 	}
 }
 
