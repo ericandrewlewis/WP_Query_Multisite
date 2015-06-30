@@ -44,6 +44,8 @@ class WP_Query_Multisite extends WP_Query{
 	function remove_filters() {
 			remove_filter('posts_request', array(&$this, 'create_and_unionize_select_statements') );
 			remove_filter('posts_fields', array(&$this, 'add_site_ID_to_posts_fields') );
+			remove_action('the_post', array(&$this, 'switch_to_blog_while_in_loop'));
+
 
 	}
 
