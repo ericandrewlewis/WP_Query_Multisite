@@ -17,7 +17,7 @@ class WP_Query_Multisite {
 		$vars[] = 'sites__in';
 		return $vars;
 	}
-	
+
 	function pre_get_posts($query) {
 		if($query->get('multisite')) {
 
@@ -31,10 +31,10 @@ class WP_Query_Multisite {
 			if ( $query->get('sites__not_in') )
 				foreach($site_IDs as $key => $site_ID )
 					if (in_array($site_ID, $query->get('sites__not_in')) ) unset($site_IDs[$key]);
-			
+
 			if ( $query->get('sites__in') )
 				foreach($site_IDs as $key => $site_ID )
-					if ( ! in_array($site_ID, $query->get('sites__in')) ) 
+					if ( ! in_array($site_ID, $query->get('sites__in')) )
 						unset($site_IDs[$key]);
 
 			$site_IDs = array_values($site_IDs);
@@ -97,11 +97,11 @@ class WP_Query_Multisite {
 
 		return $sql;
 	}
-	
+
 	function the_post($post) {
 		global $blog_id;
 
-		if(!$this->loop_end && $post->site_ID && $blog_id !== $post->site_ID) {
+		if( isset( $this->loop_end ) && !$this->loop_end && $post->site_ID && $blog_id !== $post->site_ID) {
 			switch_to_blog($post->site_ID);
 		}
 
