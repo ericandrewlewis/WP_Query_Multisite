@@ -1,7 +1,6 @@
 <?php
 
 class WP_Query_Multisite extends WP_Query{
-
 	
 	var $args;
 	
@@ -9,9 +8,8 @@ class WP_Query_Multisite extends WP_Query{
 		$this->args = $args;
 		$this->parse_multisite_args();
 		$this->add_filters();
-		$this->query($args);			  
+		$this->query( $args );			  
 		$this->remove_filters();
-
 	}
 	
 	function parse_multisite_args() {
@@ -56,6 +54,9 @@ class WP_Query_Multisite extends WP_Query{
 		$posts_per_page = isset( $this->args['posts_per_page'] ) ? $this->args['posts_per_page'] : 10;
 		$s = ( isset( $this->args['s'] ) ) ? $this->args['s'] : false;
 
+		// Remove Placeholder Escape After 4.8.3
+		$sql = $wpdb->remove_placeholder_escape( $sql );
+		
 		foreach ($this->sites_to_query as $key => $site_ID) :
 
 			switch_to_blog( $site_ID );
@@ -73,6 +74,7 @@ class WP_Query_Multisite extends WP_Query{
 			}
 			
 			$new_sql_selects[] = $new_sql_select;
+		        $new_sql_selects[] = $wpdb->add_placeholder_escape( $new_sql_select );
 			restore_current_blog();
 
 		endforeach;
